@@ -1,0 +1,40 @@
+# Nama workflow yang akan muncul di tab "Actions" GitHub
+name: Build and Push Docker Image to Docker Hub
+
+# Kapan workflow ini akan dijalankan
+on:
+  push:
+    branches: [ "main" ] # Jalankan saat ada push ke branch 'main'
+  workflow_dispatch: # Memungkinkan untuk menjalankan workflow ini secara manual
+
+# Pekerjaan (jobs) yang akan dilakukan
+jobs:
+  build-and-push:
+    # Menggunakan OS Ubuntu versi terbaru untuk menjalankan job
+    runs-on: ubuntu-latest
+
+    # Langkah-langkah (steps) yang akan dieksekusi
+    steps:
+      # Langkah 1: Checkout kode dari repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Langkah 2: Login ke Docker Hub menggunakan secrets yang sudah kita buat
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Langkah 3: Set up Docker Buildx (builder canggih dari Docker)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Langkah 4: Build dan Push Docker image
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true # 'true' berarti akan di-push setelah build selesai
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/whatsapp-bot:latest # Tag image dengan username/nama-repo:latest
