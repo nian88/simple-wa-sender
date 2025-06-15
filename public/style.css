@@ -1,0 +1,250 @@
+/* public/style.css */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #1c1e21;
+    margin: 0;
+    padding-top: 60px; /* Beri ruang untuk nav-bar fixed */
+}
+
+/* ===== STYLE NAVIGASI BARU ===== */
+nav {
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+    padding: 0 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 60px;
+}
+
+nav .brand {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #00a884;
+    text-decoration: none;
+}
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+nav ul li a {
+    display: block;
+    padding: 20px 15px;
+    text-decoration: none;
+    color: #4b4f56;
+    font-weight: 500;
+}
+
+nav ul li a:hover, nav ul li a.active {
+    color: #00a884;
+    border-bottom: 2px solid #00a884;
+}
+
+/* ===== AKHIR STYLE NAVIGASI ===== */
+
+.container {
+    width: 100%;
+    max-width: 1200px; /* Perlebar container utama */
+    margin: 20px auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+header {
+    background-color: #00a884;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.8em;
+}
+
+#status-container {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 12px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+
+main {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 20px;
+    gap: 20px; /* Beri jarak antar kolom */
+}
+
+#qr-container, #send-form-container, #log-container {
+    flex: 1; /* Agar semua kolom fleksibel */
+    min-width: 300px; /* Lebar minimum sebelum wrap */
+    display: flex;
+    flex-direction: column;
+}
+
+h2 {
+    color: #00a884;
+    border-bottom: 2px solid #f0f2f5;
+    padding-bottom: 10px;
+}
+
+/* Style Form Kirim Pesan */
+#send-form input, #send-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box; /* Penting untuk padding */
+}
+
+#send-form button {
+    width: 100%;
+    padding: 12px;
+    background-color: #00a884;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+}
+
+#send-form button:hover {
+    background-color: #008a6e;
+}
+
+#send-feedback {
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #606770;
+    text-align: center;
+}
+
+#messages {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    background: #f7f7f7;
+    flex-grow: 1;
+    /* ===== PERUBAHAN: Aktifkan Flexbox ===== */
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Jarak antar gelembung chat */
+    /* ===================================== */
+}
+
+.message {
+    padding: 8px 12px;
+    border-radius: 12px;
+    word-wrap: break-word;
+    max-width: 80%; /* Pesan tidak terlalu lebar */
+    /* ===== PERUBAHAN: Style default untuk pesan masuk ===== */
+    background-color: #e4e6eb; /* Abu-abu untuk pesan masuk */
+    align-self: flex-start; /* Rata kiri */
+    margin-bottom: 0; /* Hapus margin bawah karena sudah pakai gap */
+}
+
+/* ===== STYLE BARU UNTUK PESAN KELUAR ===== */
+.message.out {
+    background-color: #dcf8c6; /* Hijau khas WhatsApp */
+    align-self: flex-end;   /* Rata kanan */
+}
+/* ======================================== */
+
+
+.message .from {
+    font-weight: bold;
+    color: #385898;
+    display: block; /* Agar nama selalu di baris baru */
+    margin-bottom: 4px;
+    font-size: 0.9em;
+}
+
+.message.out .from {
+    color: #008a6e; /* Warna nama yang berbeda untuk pesan keluar */
+}
+
+.message .time {
+    font-size: 0.75em;
+    color: #606770;
+    float: right;
+    margin-left: 10px;
+}
+
+.message .text {
+    clear: both; /* Pastikan teks di bawah timestamp */
+}
+
+#qrcode {
+    border: 5px solid #00a884;
+    border-radius: 8px;
+    margin: 20px auto;
+}
+
+
+/* public/style.css */
+.auth-container {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 40px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    text-align: center;
+}
+.auth-container h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+.auth-container form input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+.auth-container form button {
+    width: 100%;
+    padding: 12px;
+    background-color: #00a884;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+}
+.auth-container p {
+    margin-top: 20px;
+    color: #666;
+}
+.auth-container p a {
+    color: #00a884;
+    text-decoration: none;
+    font-weight: bold;
+}

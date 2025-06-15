@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bot Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="brand">WA-Bot</a>
+            <ul>
+                <li><a href="#" class="active">Dashboard</a></li>
+                <li><a href="#">Pengaturan</a></li>
+                <li><a href="/logout">Keluar</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <header>
+            <h1>Dashboard Kontrol</h1>
+            <div id="status-container">
+                <strong>Status:</strong> <span id="status">Inisialisasi...</span>
+            </div>
+        </header>
+
+        <main>
+            <div id="qr-container">
+                <p>Pindai QR Code di sini</p>
+                <canvas id="qrcode"></canvas>
+            </div>
+
+            <div id="send-form-container">
+                <h2>Kirim Pesan</h2>
+                <form id="send-form">
+                    <input type="text" id="number" placeholder="Nomor Tujuan (cth: 6281234567890)">
+                    <textarea id="message-text" rows="4" placeholder="Ketik pesan Anda..."></textarea>
+                    <button type="submit">Kirim Pesan</button>
+                </form>
+                <div id="send-feedback"></div>
+            </div>
+            <div id="log-container">
+                <h2>Log Pesan Masuk</h2>
+                <div id="messages">
+                    </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>
