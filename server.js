@@ -9,9 +9,10 @@ const db = require('./database.js');
 const { initializeWhatsApp, getWAState, sendMessage } = require('./whatsapp-client');
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = new Server(server);
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 62542;
 
 app.use(express.json());
 // Middleware untuk parsing form data (untuk login/register)
@@ -24,8 +25,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({
     secret: 'kunci_rahasia_session_anda', // Ganti dengan secret yang lebih kompleks
     resave: false,
-    saveUninitialized: true,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 } // Sesi berlaku 1 hari
+    saveUninitialized: false,
+    cookie: {
+        secure: 'auto', // <-- Kunci utama: 'auto' akan otomatis true jika koneksi via HTTPS
+        httpOnly: true, // Mencegah akses cookie dari JavaScript sisi klien
+        maxAge: 24 * 60 * 60 * 1000 // 1 hari
+    } // Sesi berlaku 1 hari
 }));
 
 app.use((req, res, next) => {
@@ -37,29 +42,34 @@ app.use((req, res, next) => {
 
 // Middleware untuk memeriksa apakah user sudah login
 const isLoggedIn = (req, res, next) => {
+    console.log(`[isLoggedIn] Mengecek sesi untuk path: ${req.path}`);
+    console.log(`[isLoggedIn] Session ID: ${req.session.id}, User ID: ${req.session.userId}`);
     if (req.session.userId) {
-        next(); // Jika sudah login, lanjutkan
+        console.log(`[isLoggedIn] Akses diizinkan.`);
+        next();
     } else {
-        res.redirect('/login'); // Jika belum, alihkan ke halaman login
+        console.log(`[isLoggedIn] Akses ditolak, redirecting ke /login.`);
+        res.redirect('/login');
     }
 };
 
 // Rute utama untuk menyajikan halaman HTML
-app.get('/', isLoggedIn, (req, res) => {
+app.get('/dashboard', isLoggedIn, (req, res) => {
     console.log(`orint ${isLoggedIn}`);
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 
 app.get('/login', (req, res) => {
-    if (req.session.userId) return res.redirect('/'); // Jika sudah login, langsung ke dashboard
+    if (req.session.userId) return res.redirect('/dashboard'); // Jika sudah login, langsung ke dashboard
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // Rute untuk menampilkan halaman register
 app.get('/register', (req, res) => {
-    if (req.session.userId) return res.redirect('/');
-    res.sendFile(path.join(__dirname, 'public', 'register.html'));
+    if (req.session.userId) return res.redirect('/dashboard');
+    return res.status(400).send('hubungi Admin.'); 
+    //res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -92,6 +102,7 @@ app.post('/login', (req, res) => {
 
     db.get(sql, [username], async (err, user) => {
         if (err || !user) {
+            console.log(`[POST /login] Login gagal: User ${username} tidak ditemukan.`);
             return res.redirect('/login'); // Sebaiknya beri pesan error di halaman
         }
 
@@ -99,9 +110,19 @@ app.post('/login', (req, res) => {
         const match = await bcrypt.compare(password, user.password);
         if (match) {
             // Jika cocok, simpan ID user di session
+            console.log(`[POST /login] Login sukses untuk user: ${user.username} (ID: ${user.id})`);
             req.session.userId = user.id;
-            res.redirect('/');
+            console.log(`[POST /login] Sesi (ID: ${req.session.userId})`);
+            req.session.save(err => {
+                if (err) {
+                    console.error('[POST /login] Gagal menyimpan sesi:', err);
+                    return res.redirect('/login');
+                }
+                console.log(`[POST /login] Sesi berhasil disimpan, redirecting ke /`);
+                res.redirect('/dashboard');
+            });
         } else {
+            console.log(`[POST /login] Login gagal: Password salah untuk user ${username}.`);
             res.redirect('/login'); // Password salah
         }
     });

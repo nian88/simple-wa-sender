@@ -1,0 +1,15 @@
+Options +FollowSymLinks -Indexes
+RewriteEngine on
+
+# ATURAN KHUSUS: Jika request adalah untuk root path (hanya domain),
+# langsung proxy ke Node.js tanpa memeriksa apakah ada file atau tidak.
+# ^$ adalah regex untuk string kosong (root path).
+RewriteRule ^$ http://127.0.0.1:62542/ [P,L]
+
+# Aturan umum untuk path lainnya (sama seperti sebelumnya)
+# Jika request BUKAN untuk file yang ada
+RewriteCond %{REQUEST_FILENAME} !-f
+# DAN JIKA request BUKAN untuk direktori yang ada
+RewriteCond %{REQUEST_FILENAME} !-d
+# Maka, proxy request tersebut ke aplikasi Node.js Anda
+RewriteRule ^(.*)$ http://127.0.0.1:62542/$1 [P,L]
