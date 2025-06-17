@@ -1,0 +1,16 @@
+# Abaikan folder dependensi, akan diinstal di dalam container
+node_modules
+
+# Abaikan file log npm
+npm-debug.log
+
+# Abaikan folder dan file yang akan kita kelola dengan Docker Volumes
+# Ini SANGAT PENTING untuk sesi Baileys dan database
+sessions/
+app.db
+
+# Abaikan konfigurasi git dan Docker itu sendiri
+.git
+.gitignore
+Dockerfile
+.env
