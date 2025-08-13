@@ -5,8 +5,6 @@ name: Build and Push Docker Image to Docker Hub
 on:
   push:
     branches: [ "master" ] # Jalankan saat ada push ke branch 'main'
-  workflow_dispatch: # Memungkinkan untuk menjalankan workflow ini secara manual
-
 # Pekerjaan (jobs) yang akan dilakukan
 jobs:
   build-and-push:
