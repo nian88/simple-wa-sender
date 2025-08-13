@@ -1,0 +1,14 @@
+build-docker-image-prod:
+  stage: build
+  only:
+    - master
+  image: docker:20.10.22
+  services:
+    - name: docker:19.03.8-dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - echo "Disini Build Docker"
+    - docker build -t "$CI_REGISTRY_IMAGE" .
+    - docker push "$CI_REGISTRY_IMAGE"
+    - echo "Build successfully!"
