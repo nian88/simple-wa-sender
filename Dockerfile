@@ -33,6 +33,9 @@ COPY --from=builder /app .
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
+RUN touch /app/app.db
+RUN chmod 666 /app/app.db
+
 # Ekspos port yang digunakan oleh aplikasi
 EXPOSE 3000
 
