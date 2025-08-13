@@ -11,4 +11,4 @@ build-docker-image-prod:
     - echo "Disini Build Docker"
     - docker build -t "$CI_REGISTRY_IMAGE" .
     - docker push "$CI_REGISTRY_IMAGE"
-    - echo "Build successfully!"
+    - echo "Build successfully!."
