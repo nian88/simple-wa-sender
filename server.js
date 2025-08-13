@@ -13,6 +13,8 @@ app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = new Server(server);
 const PORT = process.env.PORT || 62542;
+const KEY_SECRET = process.env.KEY_SECRET || 'kunci_rahasia_session_anda';
+const PRODUCTION = process.env.PRODUCTION || false;
 
 app.use(express.json());
 // Middleware untuk parsing form data (untuk login/register)
@@ -23,7 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Middleware untuk session management
 app.use(session({
-    secret: 'kunci_rahasia_session_anda', // Ganti dengan secret yang lebih kompleks
+    secret: KEY_SECRET, // Ganti dengan secret yang lebih kompleks
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -68,8 +70,8 @@ app.get('/login', (req, res) => {
 // Rute untuk menampilkan halaman register
 app.get('/register', (req, res) => {
     if (req.session.userId) return res.redirect('/dashboard');
-    return res.status(400).send('hubungi Admin.'); 
-    //res.sendFile(path.join(__dirname, 'public', 'register.html'));
+    if(PRODUCTION) return res.status(400).send('hubungi Admin.'); 
+    res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
