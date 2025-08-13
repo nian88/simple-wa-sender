@@ -88,6 +88,7 @@ app.post('/register', async (req, res) => {
         db.run(sql, [username, hashedPassword], function(err) {
             if (err) {
                 // Error jika username sudah ada
+                console.log(`gagal User baru : ${err}`);
                 return res.status(400).send('Gagal mendaftar. Username mungkin sudah digunakan.');
             }
             console.log(`User baru telah dibuat dengan ID: ${this.lastID}`);
