@@ -14,7 +14,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 const PORT = process.env.PORT || 62542;
 const KEY_SECRET = process.env.KEY_SECRET || 'kunci_rahasia_session_anda';
-const PRODUCTION = process.env.PRODUCTION || false;
+const MODE = process.env.MODE || "local";
 
 app.use(express.json());
 // Middleware untuk parsing form data (untuk login/register)
@@ -70,7 +70,7 @@ app.get('/login', (req, res) => {
 // Rute untuk menampilkan halaman register
 app.get('/register', (req, res) => {
     if (req.session.userId) return res.redirect('/dashboard');
-    if(PRODUCTION) return res.status(400).send('hubungi Admin.'); 
+    if(MODE=="production") return res.status(400).send('hubungi Admin.'); 
     res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
