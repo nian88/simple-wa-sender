@@ -33,6 +33,7 @@ COPY --from=builder /app .
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
+RUN chown -R appuser:appuser /app && chmod 777 /app
 RUN touch /app/app.db
 RUN chmod 666 /app/app.db
 
