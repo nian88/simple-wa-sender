@@ -17,7 +17,8 @@ COPY . .
 # ================== TAHAP 2: RUNTIME ==================
 # Mulai dari image Node.js yang sama, bersih dan ringan
 FROM node:22-alpine
-RUN apk add --no-cache bash
+RUN apk add --no-cache bash sqlite sqlite-dev
+
 WORKDIR /app
 
 # Salin package.json untuk referensi
