@@ -141,7 +141,7 @@ app.get('/logout', (req, res) => {
     });
 });
 
-const API_KEY = "RAHASIA123";
+const API_KEY = KEY_SECRET;
 
 // Middleware untuk validasi API Key
 const validateApiKey = (req, res, next) => {
