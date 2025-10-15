@@ -27,6 +27,7 @@ async function initializeWhatsApp(io) {
     printQRInTerminal: false, // Kita akan handle QR di frontend
     auth: state,
     browser: ["My-Bot", "Chrome", "1.0.0"],
+    version: [2, 3000, 1025190524]
   });
 
   sock.ev.on("contacts.set", (update) => {
