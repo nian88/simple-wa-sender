@@ -3,7 +3,7 @@ const {
   default: makeWASocket,
   useMultiFileAuthState,
   DisconnectReason,
-  jidNormalizedUser,
+  jidNormalizedUser, delay
 } = require("@whiskeysockets/baileys");
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
@@ -258,6 +258,15 @@ async function sendMessage(to, text) {
       }
     }
 
+    await sock.presenceSubscribe(jid)
+    await delay(500)
+
+    await sock.sendPresenceUpdate('composing', jid)
+    const randomTypingTime = getRandomDelay(1500, 3500);
+    await delay(randomTypingTime);
+
+    await sock.sendPresenceUpdate('paused', jid)
+
     await sock.sendMessage(jid, { text });
     console.log(`Pesan terkirim ke ${jid}`);
 
@@ -269,6 +278,10 @@ async function sendMessage(to, text) {
       message: `Gagal mengirim pesan: ${error.message}`,
     };
   }
+}
+
+function getRandomDelay(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 module.exports = { initializeWhatsApp, getWAState, sendMessage };
