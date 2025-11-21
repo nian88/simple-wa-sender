@@ -17,6 +17,7 @@ COPY . .
 # ================== TAHAP 2: RUNTIME ==================
 # Mulai dari image Node.js yang sama, bersih dan ringan
 FROM node:22-alpine
+RUN apk add --no-cache bash sqlite sqlite-dev
 
 WORKDIR /app
 
@@ -32,6 +33,10 @@ COPY --from=builder /app .
 # Buat user non-root untuk keamanan
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
+
+# RUN chown -R appuser:appuser /app && chmod 777 /app
+# RUN touch /app/app.db
+# RUN chmod 666 /app/app.db
 
 # Ekspos port yang digunakan oleh aplikasi
 EXPOSE 3000

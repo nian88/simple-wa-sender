@@ -2,14 +2,14 @@
   "name": "nian88/simple-wa-sender",
   "types": "dist/js",
   "description": "Aplikasi Sederhana dengan menggunakan WA Sender",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "author": {
     "name": "azharnian",
     "url": "https://github.com/nian88/simple-wa-sender",
     "email": "azharitama2025@gmail.com"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.18",
+    "@whiskeysockets/baileys": "^6.7.21",
     "bcrypt": "^6.0.0",
     "express": "^5.1.0",
     "express-session": "^1.18.1",

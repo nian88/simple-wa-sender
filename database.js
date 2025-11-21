@@ -2,7 +2,7 @@
 const sqlite3 = require('sqlite3').verbose();
 
 // Buat atau hubungkan ke file database app.db
-const db = new sqlite3.Database('./app.db', (err) => {
+const db = new sqlite3.Database('./database/app.db', (err) => {
     if (err) {
         console.error('Error saat membuka database', err.message);
     } else {
