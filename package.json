@@ -9,7 +9,7 @@
     "email": "azharitama2025@gmail.com"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.21",
+    "baileys": "^6.7.21",
     "bcrypt": "^6.0.0",
     "express": "^5.1.0",
     "express-session": "^1.18.1",

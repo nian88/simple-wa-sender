@@ -4,7 +4,7 @@ const {
   useMultiFileAuthState,
   DisconnectReason,
   jidNormalizedUser, delay
-} = require("@whiskeysockets/baileys");
+} = require("baileys");
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
 
@@ -27,7 +27,7 @@ async function initializeWhatsApp(io) {
     printQRInTerminal: false, // Kita akan handle QR di frontend
     auth: state,
     browser: ["My-Bot", "Chrome", "1.0.0"],
-    // version: [2, 3000, 1025190524]
+    version: [2, 3000, 1027934701]
   });
 
   sock.ev.on("contacts.set", (update) => {
@@ -140,10 +140,10 @@ async function initializeWhatsApp(io) {
             contacts[participantJid]?.notify ||
             msg.pushName ||
             participantJid.split("@")[0];
-          finalSenderDisplay = `${groupName} > ${participantName}`;
+          finalSenderDisplay = `${groupName}(${groupId}) > ${participantName}`;
         } else {
           // Jika tidak ada partisipan, ini adalah pesan sistem
-          finalSenderDisplay = `${groupName} > [Pesan Sistem]`;
+          finalSenderDisplay = `${groupName} (${groupId}) > [Pesan Sistem]`;
         }
 
         displayName = finalSenderDisplay;

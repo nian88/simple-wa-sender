@@ -57,7 +57,6 @@ const isLoggedIn = (req, res, next) => {
 
 // Rute utama untuk menyajikan halaman HTML
 app.get('/dashboard', isLoggedIn, (req, res) => {
-    console.log(`orint ${isLoggedIn}`);
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
@@ -70,7 +69,7 @@ app.get('/login', (req, res) => {
 // Rute untuk menampilkan halaman register
 app.get('/register', (req, res) => {
     if (req.session.userId) return res.redirect('/dashboard');
-    if(MODE=="production") return res.status(400).send('hubungi Admin.'); 
+    if(MODE=="production") return res.status(400).send('hubungi Admin.');
     res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
