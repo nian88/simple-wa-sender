@@ -30,6 +30,8 @@ RUN npm install --omit=dev
 # Salin kode aplikasi dari tahap builder
 COPY --from=builder /app .
 
+RUN mkdir -p database
+
 # Buat user non-root untuk keamanan
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
