@@ -7,6 +7,7 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const db = require('./database.js');
 const { initializeWhatsApp, getWAState, sendMessage } = require('./whatsapp-client');
+const { MessageQueue } = require("./message-queue");
 
 const app = express();
 app.set('trust proxy', 1);
@@ -39,8 +40,6 @@ app.use((req, res, next) => {
     console.log(`[REQUEST] ${req.method} ${req.url}`);
     next();
 });
-
-
 
 // Middleware untuk memeriksa apakah user sudah login
 const isLoggedIn = (req, res, next) => {
@@ -130,7 +129,6 @@ app.post('/login', (req, res) => {
     });
 });
 
-
 // Rute untuk logout
 app.get('/logout', (req, res) => {
     req.session.destroy(err => {
@@ -155,53 +153,57 @@ const validateApiKey = (req, res, next) => {
     }
 };
 
-app.post('/api/send-message', validateApiKey, async (req, res) => {
-    // Gunakan middleware 'validateApiKey' untuk melindungi rute ini
-    console.log('Request API diterima untuk /api/send-message');
-
-    // 1. Validasi status koneksi WhatsApp
-    if (getWAState().status !== 'connected') {
-        return res.status(503).json({
-            success: false,
-            message: 'Service Unavailable: WhatsApp belum terhubung.'
-        });
-    }
-
-    const { to, text } = req.body;
-
-    // 2. Validasi input dari body request
-    if (!to || !text) {
-        return res.status(400).json({
-            success: false,
-            message: 'Bad Request: Mohon sertakan "to" dan "text" dalam body request.'
-        });
-    }
-
-    try {
-        // 3. Panggil fungsi sendMessage yang sudah cerdas
-        const result = await sendMessage(to, text);
-
-        // 4. Kirim response berdasarkan hasil dari sendMessage
-        if (result.success) {
-            res.status(200).json(result);
-        } else {
-            // Jika sendMessage gagal (misal nomor tidak ada), kirim error
-            res.status(404).json(result);
-        }
-    } catch (error) {
-        console.error('Error pada API /send-message:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal Server Error'
-        });
-    }
+// Konservatif untuk jam padat presensi
+const messageQueue = new MessageQueue({
+    minDelayMs: 3000,
+    maxDelayMs: 6500,
+    burstLimit: 10,
+    burstCooldownMs: 45000,
+    dedupTtlMs: 3 * 60 * 1000,
 });
 
+// Helper untuk membuat dedupKey presensi (opsional, tapi sangat dianjurkan)
+// Misal client kirim { to, text, meta: { studentId, type, date, time } }
+function makeDedupKey(body) {
+    const meta = body?.meta;
+    if (!meta?.studentId || !meta?.type || !meta?.date) return null;
+    return `presence:${meta.studentId}:${meta.type}:${meta.date}`;
+}
+
+app.post('/api/send-message', async (req, res) => {
+    const apiKey = req.headers["x-api-key"];
+    if (apiKey !== API_KEY) {
+        return res.status(401).json({ success: false, message: "API Key tidak valid" });
+    }
+
+    const { to, text } = req.body || {};
+    if (!to || !text) {
+        return res.status(400).json({ success: false, message: "to/text wajib diisi" });
+    }
+
+    const dedupKey = makeDedupKey(req.body);
+
+    const enq = messageQueue.enqueue(
+        async () => {
+            await sendMessage(to, text);
+        },
+        { dedupKey },
+    );
+
+    if (!enq.accepted && enq.reason === "duplicate") {
+        return res.json({ success: true, message: "Duplikat terdeteksi, skip kirim." });
+    }
+
+    return res.json({
+        success: true,
+        message: `Queued. Antrian saat ini: ${messageQueue.size()}`,
+    });
+});
 
 // Setup koneksi Socket.IO
 io.on('connection', (socket) => {
     console.log('Client terhubung via Socket.IO');
-     const currentState = getWAState();
+    const currentState = getWAState();
     if (currentState.status === 'connected') {
         socket.emit('status', 'WhatsApp berhasil terhubung!');
         socket.emit('qr', null); // Pastikan QR code disembunyikan
@@ -212,13 +214,40 @@ io.on('connection', (socket) => {
         socket.emit('status', 'Menghubungkan ke WhatsApp...');
     }
 
-    socket.on('send-message', async (data) => {
-        const { number, message } = data;
-        const result = await sendMessage(number, message);
-        // Kirim status kembali ke klien yang meminta
-        socket.emit('send-status', result);
+    socket.on("send-message", async (data) => {
+        try {
+            const { to, text } = data || {};
+            if (!to || !text) {
+                socket.emit("send-status", { success: false, message: "to/text wajib diisi" });
+                return;
+            }
+
+            const dedupKey = makeDedupKey(data);
+
+            const enq = messageQueue.enqueue(
+                async () => {
+                    const result = await sendMessage(to, text);
+                    socket.emit("send-status", result);
+                },
+                { dedupKey },
+            );
+
+            if (!enq.accepted && enq.reason === "duplicate") {
+                socket.emit("send-status", {
+                    success: true,
+                    message: "Duplikat terdeteksi, pesan tidak dikirim ulang.",
+                });
+                return;
+            }
+
+            socket.emit("send-status", {
+                success: true,
+                message: `Dimasukkan ke antrian. Posisi saat ini: ${messageQueue.size()}`,
+            });
+        } catch (e) {
+            socket.emit("send-status", { success: false, message: e.message });
+        }
     });
-    // =
 
     socket.on('disconnect', () => {
         console.log('Client terputus');

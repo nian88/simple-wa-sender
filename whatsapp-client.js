@@ -177,7 +177,6 @@ async function initializeWhatsApp(io) {
   sock.ev.on("messages.upsert", async (m) => {
     const msg = m.messages?.[0];
     if (!msg?.message) return;
-    console.log(msg);
 
     const fromMe = msg.key.fromMe;
     const jid = msg.key.remoteJid;
