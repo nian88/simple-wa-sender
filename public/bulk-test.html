@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Bulk Test - WA Sender</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 24px; max-width: 900px; }
+      textarea, input { width: 100%; padding: 10px; box-sizing: border-box; }
+      textarea { min-height: 140px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      button { padding: 10px 14px; cursor: pointer; }
+      pre { background: #111; color: #eee; padding: 12px; overflow: auto; }
+      .hint { color: #555; font-size: 13px; }
+      .danger { color: #900; }
+    </style>
+  </head>
+  <body>
+    <h1>Bulk Test: /api/send-message</h1>
+    <p class="hint">
+      Ini hanya untuk testing. Pastikan akun WA siap dan rate limiter/queue aktif agar tidak burst.
+    </p>
+
+    <div class="row">
+      <div>
+        <label>API Base URL</label>
+        <input id="baseUrl" value="http://localhost:62542" />
+        <div class="hint">Contoh: http://localhost:62542</div>
+      </div>
+      <div>
+        <label>X-API-KEY</label>
+        <input id="apiKey" placeholder="KEY_SECRET / API key kamu" />
+        <div class="hint danger">Jangan gunakan key production di komputer publik.</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 12px">
+      <label>Nomor tujuan (1 baris 1 nomor, boleh pakai 08.. / 62..)</label>
+      <textarea id="numbers" placeholder="62812xxxxxxx&#10;0812xxxxxxx&#10;..."></textarea>
+      <div class="hint">Total nomor akan dihitung otomatis.</div>
+    </div>
+
+    <div class="row" style="margin-top: 12px">
+      <div>
+        <label>Pesan</label>
+        <textarea id="message" placeholder="Tulis pesan test"></textarea>
+      </div>
+      <div>
+        <label>Delay antar request (ms)</label>
+        <input id="delayMs" type="number" value="200" />
+        <div class="hint">Ini delay pemanggilan API. Pengiriman tetap diatur oleh queue server.</div>
+
+        <label style="margin-top: 12px">Mode</label>
+        <select id="mode" style="width:100%; padding:10px;">
+          <option value="sequential" selected>Sequential</option>
+          <option value="parallel">Parallel (tidak disarankan)</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top: 12px; display:flex; gap:10px;">
+      <button id="btnRun">Run Bulk Test</button>
+      <button id="btnDry">Dry Run (cek & hitung saja)</button>
+      <button id="btnClear">Clear Log</button>
+    </div>
+
+    <h3>Log</h3>
+    <pre id="log"></pre>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const logEl = $("log");
+
+      function log(line) {
+        logEl.textContent += line + "\n";
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function parseNumbers(raw) {
+        return raw
+          .split(/\r?\n/)
+          .map(s => s.trim())
+          .filter(Boolean);
+      }
+
+      async function sleep(ms) {
+        return new Promise(r => setTimeout(r, ms));
+      }
+
+      async function sendOne(baseUrl, apiKey, to, text) {
+        const res = await fetch(baseUrl.replace(/\/$/, "") + "/api/send-message", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey
+          },
+          body: JSON.stringify({ to, text })
+        });
+        const json = await res.json().catch(() => ({}));
+        return { status: res.status, ok: res.ok, json };
+      }
+
+      async function run() {
+        const baseUrl = $("baseUrl").value.trim();
+        const apiKey = $("apiKey").value.trim();
+        const numbers = parseNumbers($("numbers").value);
+        const text = $("message").value;
+        const delayMs = Number($("delayMs").value || 0);
+        const mode = $("mode").value;
+
+        if (!baseUrl) return log("Base URL wajib diisi");
+        if (!apiKey) return log("API key wajib diisi");
+        if (!numbers.length) return log("Nomor tujuan kosong");
+        if (!text) return log("Pesan kosong");
+
+        log(`Total: ${numbers.length} nomor. Mode=${mode}, delay=${delayMs}ms`);
+        const started = Date.now();
+
+        let okCount = 0;
+        let failCount = 0;
+
+        if (mode === "parallel") {
+          const promises = numbers.map(async (to, idx) => {
+            const r = await sendOne(baseUrl, apiKey, to, text);
+            if (r.ok) okCount++; else failCount++;
+            log(`[${idx + 1}/${numbers.length}] to=${to} status=${r.status} resp=${JSON.stringify(r.json)}`);
+          });
+          await Promise.all(promises);
+        } else {
+          for (let i = 0; i < numbers.length; i++) {
+            const to = numbers[i];
+            const r = await sendOne(baseUrl, apiKey, to, text);
+            if (r.ok) okCount++; else failCount++;
+            log(`[${i + 1}/${numbers.length}] to=${to} status=${r.status} resp=${JSON.stringify(r.json)}`);
+            if (delayMs > 0) await sleep(delayMs);
+          }
+        }
+
+        const ms = Date.now() - started;
+        log(`Done. ok=${okCount} fail=${failCount} time=${ms}ms`);
+      }
+
+      $("btnRun").addEventListener("click", () => run().catch(e => log("ERR: " + e.message)));
+      $("btnDry").addEventListener("click", () => {
+        const numbers = parseNumbers($("numbers").value);
+        log(`Dry run: total ${numbers.length} nomor`);
+      });
+      $("btnClear").addEventListener("click", () => (logEl.textContent = ""));
+    </script>
+  </body>
+</html>

@@ -8,6 +8,7 @@ const bcrypt = require('bcrypt');
 const db = require('./database.js');
 const { initializeWhatsApp, getWAState, sendMessage } = require('./whatsapp-client');
 const { MessageQueue } = require("./message-queue");
+const crypto = require("crypto");
 
 const app = express();
 app.set('trust proxy', 1);
@@ -73,6 +74,11 @@ app.get('/register', (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Bulk tester page (optional: protect with isLoggedIn)
+app.get("/bulk-test", isLoggedIn, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "bulk-test.html"));
+});
 
 // Rute untuk menghandle proses register
 app.post('/register', async (req, res) => {
@@ -162,12 +168,30 @@ const messageQueue = new MessageQueue({
     dedupTtlMs: 3 * 60 * 1000,
 });
 
-// Helper untuk membuat dedupKey presensi (opsional, tapi sangat dianjurkan)
-// Misal client kirim { to, text, meta: { studentId, type, date, time } }
+// Helper untuk membuat dedupKey presensi
+// Tetap kompatibel dengan body lama {to, text} tanpa meta.
+// - Jika meta tersedia: pakai studentId+type+date (lebih akurat)
+// - Jika tidak: pakai to + hash(text) + time-bucket (mengurangi duplikasi burst)
 function makeDedupKey(body) {
     const meta = body?.meta;
-    if (!meta?.studentId || !meta?.type || !meta?.date) return null;
-    return `presence:${meta.studentId}:${meta.type}:${meta.date}`;
+
+    // Prefer meta-based dedup (akurat untuk presensi)
+    if (meta?.studentId && meta?.type && meta?.date) {
+        return `presence:${meta.studentId}:${meta.type}:${meta.date}`;
+    }
+
+    // Backward compatible: dedup berbasis payload yang ada
+    const to = body?.to;
+    const text = body?.text;
+    if (!to || !text) return null;
+
+    // time bucket (mis. 2 menit) agar pesan identik tidak terkirim berkali-kali dalam window pendek,
+    // tapi tetap bisa terkirim lagi pada window berikutnya (mis. datang vs pulang berbeda teksnya)
+    const bucketMs = 2 * 60 * 1000;
+    const bucket = Math.floor(Date.now() / bucketMs);
+
+    const hash = crypto.createHash("sha1").update(String(text)).digest("hex").slice(0, 12);
+    return `payload:${to}:${hash}:${bucket}`;
 }
 
 app.post('/api/send-message', async (req, res) => {
