@@ -52,17 +52,17 @@ socket.on('message', (msg) => {
 sendForm.addEventListener('submit', (e) => {
     e.preventDefault(); // Mencegah form reload halaman
 
-    const number = numberInput.value;
-    const message = messageInput.value;
+    const to = numberInput.value;
+    const text = messageInput.value;
 
-    if (!number || !message) {
+    if (!to || !text) {
         sendFeedback.textContent = 'Nomor dan pesan tidak boleh kosong!';
         sendFeedback.style.color = 'red';
         return;
     }
 
     // Kirim data ke server via socket
-    socket.emit('send-message', { number, message });
+    socket.emit('send-message', { to, text });
 
     sendFeedback.textContent = 'Mengirim...';
     sendFeedback.style.color = '#606770';
