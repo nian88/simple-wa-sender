@@ -41,8 +41,8 @@ async function initializeWhatsApp(io) {
     logger: pino({ level: "silent" }),
     printQRInTerminal: false, // Kita handle QR di frontend
     auth: state,
-    browser: ["Pegawai", "Chrome", "1.0.0"],
-    // Hindari hardcode version di v7 RC (rawan break saat WA update)
+    browser: ["Pegawai", "Chrome", "145.0.0"],
+    version: [2, 3000, 1033893291],
   });
 
   // Bind store jika tersedia
